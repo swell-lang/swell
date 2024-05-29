@@ -45,6 +45,8 @@ pub enum TokenKind {
 
     #[token("protected")]
     ProtectedKeyword,
+    #[token("expansion")]
+    ExpanionKeyword,
 
     #[token("if")]
     IfKeyword,
@@ -68,6 +70,8 @@ pub enum TokenKind {
     InKeyword,
     #[token("prop")]
     PropertyKeyword,
+    #[token("init")]
+    InitKeyword,
     #[token("auto")]
     AutoKeyword,
 
@@ -252,7 +256,7 @@ pub enum NodeKind {
     ArgList,
     Field,
 
-    Block,
+    FunctionBlock,
     AccessModifier,
     Property,
 }
@@ -515,6 +519,24 @@ fn property(p: &mut Parser) {
     p.close(m, Property);
 }
 
+mod property_tests {
+    use crate::lexer::{lex, Parser, property};
+
+    #[test]
+    fn prop_smoke() {
+        let text = "
+prop Value: String;
+
+prop Value: String = \"TestValue\"
+";
+        let tokens = lex(text);
+        let mut p = Parser::new(tokens);
+        let cst = property(&mut p);
+        let res = p.build_node();
+        println!("{res:?}");
+    }
+}
+
 const PARAM_LIST_RECOVERY: &[TokenKind] = &[FunctionKeyword, LeftCurley];
 fn param_list(p: &mut Parser) {
     assert!(p.at(LeftParen));
@@ -592,7 +614,7 @@ fn function_block(p: &mut Parser) {
     }
     p.expect(RightCurley);
 
-    p.close(m, Block);
+    p.close(m, FunctionBlock);
 }
 
 fn stmt_let(p: &mut Parser) {
@@ -819,7 +841,7 @@ mod tests {
 
         pub prop Value: string;
       }
-    ";
+      ";
         let cst = parse(text);
         println!("{cst:?}");
     }
@@ -833,7 +855,7 @@ mod tests {
         prop
         pub prop Value2: string;
       }
-    ";
+      ";
         let cst = parse(text);
         println!("{cst:?}");
     }
